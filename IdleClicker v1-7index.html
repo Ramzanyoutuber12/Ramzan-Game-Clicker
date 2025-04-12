@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Ramzan Game Clicker</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #f4f4f4;
+      margin: 0;
+    }
+    .wrapper {
+      display: flex;
+      height: 100vh;
+      width: 100vw;
+    }
+    .game-container {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      background: #ffffff;
+      padding: 2rem;
+      border-radius: 20px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+      margin: auto;
+    }
+    .counter {
+      font-size: 2rem;
+      margin-bottom: 1rem;
+      color: #333;
+    }
+    .click-button {
+      font-size: 1.5rem;
+      padding: 1rem 2rem;
+      background-color: #4CAF50;
+      color: white;
+      border: none;
+      border-radius: 10px;
+      cursor: pointer;
+      transition: background-color 0.2s;
+    }
+    .click-button:hover {
+      background-color: #388E3C;
+    }
+    .upgrade-container {
+      position: absolute;
+      top: 20px;
+      right: 20px;
+      background: #ffffff;
+      padding: 1rem;
+      border-radius: 10px;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+    }
+    .upgrade-container h2 {
+      margin-top: 0;
+      color: #333;
+    }
+    .upgrade {
+      margin: 0.5rem 0;
+    }
+    .upgrade button {
+      padding: 0.5rem 1rem;
+      background-color: #4CAF50;
+      color: white;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+    .upgrade button:hover {
+      background-color: #388E3C;
+    }
+    .manual-save {
+      margin-top: 1rem;
+    }
+    .reset-button {
+      margin-top: 1rem;
+      background-color: #f44336;
+    }
+    .reset-button:hover {
+      background-color: #c62828;
+    }
+  </style>
+</head>
+<body>
+  <div class="wrapper">
+    <div class="upgrade-container">
+      <h2>Upgrades</h2>
+      <div class="upgrade"><button onclick="buyBuilding('pizza')">Pizza (Cost: <span id="pizza-cost">10</span>)</button></div>
+      <div class="upgrade"><button onclick="buyBuilding('burgers')">Burgers (Cost: <span id="burgers-cost">50</span>)</button></div>
+      <div class="upgrade"><button onclick="buyBuilding('fries')">Fries (Cost: <span id="fries-cost">200</span>)</button></div>
+      <div class="upgrade"><button onclick="buyBuilding('eggs')">Eggs (Cost: <span id="eggs-cost">500</span>)</button></div>
+      <div class="upgrade"><button onclick="buyBuilding('chickenNuggets')">Chicken Nuggets (Cost: <span id="chickenNuggets-cost">1000</span>)</button></div>
+    </div>
+    <div class="game-container">
+      <h1 style="color: #333;">Ramzan Game Clicker</h1>
+      <div class="counter" id="counter">0</div>
+      <button class="click-button" onclick="incrementCounter()">Click Me!</button>
+      <button class="click-button manual-save" onclick="saveGame()">Manual Save</button>
+      <button class="click-button reset-button" onclick="resetGame()">Reset Game</button>
+    </div>
+  </div>
+
+  <script>
+    let count = 0;
+    const counterDisplay = document.getElementById('counter');
+
+    const buildings = {
+      pizza: { cost: 10, cps: 1, count: 0 },
+      burgers: { cost: 50, cps: 3, count: 0 },
+      fries: { cost: 200, cps: 20, count: 0 },
+      eggs: { cost: 500, cps: 50, count: 0 },
+      chickenNuggets: { cost: 1000, cps: 100, count: 0 }
+    };
+
+    function incrementCounter() {
+      count++;
+      updateDisplay();
+      saveGame();
+    }
+
+    function buyBuilding(type) {
+      const building = buildings[type];
+      if (count >= building.cost) {
+        count -= building.cost;
+        building.count++;
+        building.cost *= 2;
+        building.cost = Math.ceil(building.cost);
+        document.getElementById(`${type}-cost`).innerText = building.cost;
+        updateDisplay();
+        saveGame();
+      }
+    }
+
+    function updateDisplay() {
+      counterDisplay.innerText = count;
+    }
+
+    function saveGame() {
+      const saveData = {
+        count,
+        buildings: {}
+      };
+      for (const key in buildings) {
+        saveData.buildings[key] = {
+          cost: buildings[key].cost,
+          count: buildings[key].count
+        };
+      }
+      localStorage.setItem('idleClickerSave', JSON.stringify(saveData));
+    }
+
+    function loadGame() {
+      const saved = localStorage.getItem('idleClickerSave');
+      if (saved) {
+        const data = JSON.parse(saved);
+        count = data.count;
+        for (const key in data.buildings) {
+          buildings[key].cost = data.buildings[key].cost;
+          buildings[key].count = data.buildings[key].count;
+          document.getElementById(`${key}-cost`).innerText = buildings[key].cost;
+        }
+        updateDisplay();
+      }
+    }
+
+    function resetGame() {
+      localStorage.removeItem('idleClickerSave');
+      count = 0;
+      for (const key in buildings) {
+        buildings[key].cost = {
+          pizza: 10,
+          burgers: 50,
+          fries: 200,
+          eggs: 500,
+          chickenNuggets: 1000
+        }[key];
+        buildings[key].count = 0;
+        document.getElementById(`${key}-cost`).innerText = buildings[key].cost;
+      }
+      updateDisplay();
+    }
+
+    setInterval(() => {
+      for (const key in buildings) {
+        count += buildings[key].cps * buildings[key].count;
+      }
+      updateDisplay();
+      saveGame();
+    }, 1000);
+
+    window.onload = loadGame;
+  </script>
+</body>
+</html>
